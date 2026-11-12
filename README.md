@@ -1,10 +1,10 @@
 # 3dSolarSystem
 
+**Live site: <https://divitgangrade-lab.github.io/3dSolarSystem/>**
+
 An interactive orrery. The Sun, eight planets, Earth's moon, and the rings of
 Saturn and Uranus are drawn procedurally in WebGL: every surface, cloud band,
 ring and star is generated at runtime, so the project ships no image files.
-
-Live site: <https://divitgangrade-lab.github.io/3dSolarSystem/>
 
 ## Repository layout
 
@@ -29,6 +29,28 @@ layer that React renders. It exposes a small interface (`start`, `subscribe`,
 `focusBody`, `setPaused`, `setSpeed`, `overview`) so the UI never reaches into
 the renderer's state.
 
+### Dossier drawer
+
+The drawer's six React Bits components (`TiltedCard`, `AnimatedList`, `BlurText`,
+`PixelCard`, `LineSidebar`, `Lightning`) are `React.lazy` imports behind a single
+Suspense boundary, so they never load until the drawer opens. Pointing at or
+focusing the Dossier toggle warms them first.
+
+While the drawer is open, Close receives focus, Tab stays inside the panel, and
+closing restores focus to the toggle. Escape closes the drawer without also
+resetting the camera.
+
+On screens narrower than 560px the section nav becomes a horizontal row above a
+full-width panel, because the two-column layout cannot hold both.
+
+### Bundle shape
+
+| Chunk | Size | Gzip | When it loads |
+| --- | --- | --- | --- |
+| `index-*.js` | 627 kB | 215 kB | first paint |
+| `orrery-*.js` | 593 kB | 149 kB | first paint, after the boot screen |
+| dossier chunks | 64 kB total | 25 kB | first drawer open, warmed on hover |
+
 ## Publishing
 
 GitHub Pages serves the `main` branch root, so the built app is committed there:
@@ -43,14 +65,19 @@ touch .nojekyll
 ```
 
 The build uses a relative base, so the same files work at `/` and at
-`/3dSolarSystem/`.
+`/3dSolarSystem/`. After pushing, confirm the new hashed bundle is served:
+
+```bash
+curl -s https://divitgangrade-lab.github.io/3dSolarSystem/ | grep -o 'index-[^"]*\.js'
+```
 
 ## Controls
 
 - Drag to orbit, scroll or pinch to zoom. Right-drag or shift-drag pans, and
   releases the camera from a followed body.
 - Click a world, its label, or a row in the body rail to frame it.
-- `Space` pauses and resumes. `Escape` returns to the full system.
+- `Space` pauses and resumes.
+- `Escape` closes the dossier if it is open, otherwise returns to the full system.
 - `0`-`9` jump to a body in rail order. `D` opens the dossier.
 
 ## Interface inventory: 25 React Bits components

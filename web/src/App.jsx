@@ -37,6 +37,7 @@ function warmDossier() {
   import('./reactbits/Lightning.jsx');
   import('./reactbits/LineSidebar.jsx');
   import('./reactbits/PixelCard.jsx');
+  import('./reactbits/TiltedCard.jsx');
 }
 
 const SECTIONS = ['Bodies', 'Signal', 'About'];
