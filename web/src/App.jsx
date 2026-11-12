@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AnimatedContent from './reactbits/AnimatedContent/AnimatedContent.jsx';
-import AnimatedList from './reactbits/AnimatedList.jsx';
-import BlurText from './reactbits/BlurText/BlurText.jsx';
+/* The dossier is opened on demand, so its components load on first open and
+   stay out of the initial payload. */
+const AnimatedList = lazy(() => import('./reactbits/AnimatedList.jsx'));
+const BlurText = lazy(() => import('./reactbits/BlurText/BlurText.jsx'));
 import BorderGlow from './reactbits/BorderGlow.jsx';
 import ClickSpark from './reactbits/ClickSpark/ClickSpark.jsx';
 import CountUp from './reactbits/CountUp/CountUp.jsx';
@@ -11,11 +13,11 @@ import ElasticSlider from './reactbits/ElasticSlider.jsx';
 import ElectricBorder from './reactbits/ElectricBorder.jsx';
 import GlareHover from './reactbits/GlareHover.jsx';
 import GradientText from './reactbits/GradientText.jsx';
-import Lightning from './reactbits/Lightning.jsx';
-import LineSidebar from './reactbits/LineSidebar.jsx';
+const Lightning = lazy(() => import('./reactbits/Lightning.jsx'));
+const LineSidebar = lazy(() => import('./reactbits/LineSidebar.jsx'));
 import Magnet from './reactbits/Magnet/Magnet.jsx';
 import Noise from './reactbits/Noise.jsx';
-import PixelCard from './reactbits/PixelCard.jsx';
+const PixelCard = lazy(() => import('./reactbits/PixelCard.jsx'));
 import RotatingText from './reactbits/RotatingText.jsx';
 import ShinyText from './reactbits/ShinyText.jsx';
 import SplitFlapText from './reactbits/SplitFlapText.jsx';
@@ -23,7 +25,19 @@ import SplitText from './reactbits/SplitText/SplitText.jsx';
 import SpotlightCard from './reactbits/SpotlightCard.jsx';
 import StarBorder from './reactbits/StarBorder.jsx';
 import TextType from './reactbits/TextType.jsx';
-import TiltedCard from './reactbits/TiltedCard.jsx';
+const TiltedCard = lazy(() => import('./reactbits/TiltedCard.jsx'));
+
+/* Warm the dossier chunks when a pointer or the keyboard reaches the toggle. */
+let warmed = false;
+function warmDossier() {
+  if (warmed) return;
+  warmed = true;
+  import('./reactbits/AnimatedList.jsx');
+  import('./reactbits/BlurText/BlurText.jsx');
+  import('./reactbits/Lightning.jsx');
+  import('./reactbits/LineSidebar.jsx');
+  import('./reactbits/PixelCard.jsx');
+}
 
 const SECTIONS = ['Bodies', 'Signal', 'About'];
 
@@ -80,6 +94,52 @@ function FactValue({ value }) {
   );
 }
 
+/* Keep Tab inside the dossier while it covers the scene. */
+function trapFocus(event) {
+  if (event.key !== 'Tab') return;
+  const items = [...event.currentTarget.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])')]
+    .filter((el) => el.offsetParent !== null);
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+/* LineSidebar renders list items. Give them button semantics once the lazy
+   chunk has rendered, and keep aria-current in step with the section. */
+function NavA11y({ section }) {
+  useEffect(() => {
+    const items = document.querySelectorAll('.drawer-nav .line-sidebar__item');
+    items.forEach((item, index) => {
+      item.setAttribute('role', 'button');
+      item.setAttribute('tabindex', '0');
+      item.setAttribute('aria-label', SECTIONS[index]);
+      if (SECTIONS[index] === section) item.setAttribute('aria-current', 'true');
+      else item.removeAttribute('aria-current');
+    });
+  }, [section]);
+
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const item = event.target instanceof Element ? event.target.closest('.line-sidebar__item') : null;
+      if (!item) return;
+      event.preventDefault();
+      item.click();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  return null;
+}
+
 export default function App() {
   const [scene, setScene] = useState(null);
   const [snapshot, setSnapshot] = useState(null);
@@ -88,6 +148,8 @@ export default function App() {
   const [section, setSection] = useState(SECTIONS[0]);
   const [bootGone, setBootGone] = useState(false);
   const [bootFading, setBootFading] = useState(false);
+  const toggleRef = useRef(null);
+  const wasOpen = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,6 +180,11 @@ export default function App() {
       window.clearTimeout(remove);
     };
   }, [ready]);
+
+  useEffect(() => {
+    if (!drawer && wasOpen.current) toggleRef.current?.focus({ preventScroll: true });
+    wasOpen.current = drawer;
+  }, [drawer]);
 
   const focus = snapshot?.focus ?? null;
   const bodies = useMemo(() => {
@@ -151,7 +218,10 @@ export default function App() {
         return;
       }
       if (event.key === 'Escape') {
-        setDrawer(false);
+        if (drawer) {
+          setDrawer(false);
+          return;
+        }
         scene.overview();
         return;
       }
@@ -168,31 +238,7 @@ export default function App() {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [scene, bodies]);
-
-  /* LineSidebar renders its options as list items, so give them the keyboard
-     semantics of the buttons they behave like. */
-  useEffect(() => {
-    if (!drawer) return undefined;
-    const items = document.querySelectorAll('.drawer-nav .line-sidebar__item');
-    items.forEach((item, index) => {
-      item.setAttribute('role', 'button');
-      item.setAttribute('tabindex', '0');
-      item.setAttribute('aria-label', SECTIONS[index]);
-      if (SECTIONS[index] === section) item.setAttribute('aria-current', 'true');
-    });
-
-    const onKey = (event) => {
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      const item = event.target instanceof Element ? event.target.closest('.line-sidebar__item') : null;
-      if (!item) return;
-      event.preventDefault();
-      item.click();
-    };
-
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [drawer, section]);
+  }, [scene, bodies, drawer]);
 
   const onSpeed = (value) => {
     setSlider(value);
@@ -410,7 +456,11 @@ export default function App() {
           <button
             type="button"
             className="drawer-toggle"
+            ref={toggleRef}
             aria-expanded={drawer}
+            aria-controls="dossier"
+            onPointerEnter={warmDossier}
+            onFocus={warmDossier}
             onClick={() => setDrawer((open) => !open)}
           >
             Dossier
@@ -419,11 +469,19 @@ export default function App() {
         </div>
       </ClickSpark>
 
+      <Suspense fallback={null}>
       {drawer ? (
-        <div className="drawer" role="dialog" aria-modal="false" aria-label="Dossier">
+        <div
+          className="drawer"
+          id="dossier"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Dossier"
+          onKeyDown={trapFocus}
+        >
           <div className="drawer-head">
             <span className="drawer-title">Dossier</span>
-            <button type="button" className="drawer-close" onClick={() => setDrawer(false)}>
+            <button type="button" className="drawer-close" autoFocus onClick={() => setDrawer(false)}>
               Close
             </button>
           </div>
@@ -431,15 +489,19 @@ export default function App() {
           <div className="drawer-body">
             <LineSidebar
               items={SECTIONS}
+              defaultActive={SECTIONS.indexOf(section)}
               onItemClick={(index) => setSection(SECTIONS[index])}
               accentColor={AMBER}
               textColor="#b6b1a6"
               markerColor="#5f5d55"
               showIndex={false}
+              markerLength={40}
+              maxShift={10}
               itemGap={18}
               fontSize={0.82}
               className="drawer-nav"
             />
+            <NavA11y section={section} />
 
             <div className="drawer-panel">
               {section === 'Bodies' && focus ? (
@@ -469,10 +531,9 @@ export default function App() {
                     onItemSelect={(item) => focusBody(item.id)}
                     theme="dark"
                     accentColor={AMBER}
-                    displayScrollbar={false}
-                    showGradients={false}
                     frame={false}
                     animation="pop"
+                    maxHeight={420}
                   />
                 </>
               ) : null}
@@ -512,6 +573,8 @@ export default function App() {
                   colors="#f0b429,#2b3038,#6f6a5d"
                   gap={7}
                   speed={28}
+                  opacity={0.45}
+                  glow={0.3}
                   trigger="hover"
                   theme="dark"
                   radius={12}
@@ -533,6 +596,7 @@ export default function App() {
           </div>
         </div>
       ) : null}
+      </Suspense>
 
       {!bootGone ? (
         <div

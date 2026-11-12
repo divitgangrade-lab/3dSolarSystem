@@ -413,8 +413,8 @@
 .drawer-body {
   display: grid;
   flex: 1;
-  grid-template-columns: 86px minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 16px;
   min-height: 0;
   padding-top: 18px;
 }
@@ -484,24 +484,29 @@
 
 .about-card {
   width: 100%;
-  min-height: 300px;
-  padding: 20px;
+  height: auto;
+  min-height: 340px;
+  padding: 22px;
+  place-items: stretch;
+  align-content: center;
   text-align: left;
 }
 
 .about-title {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-family: var(--serif);
   font-size: 22px;
   font-weight: 400;
+  text-shadow: 0 1px 6px rgba(5, 7, 11, 0.9);
 }
 
 .about-copy {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: 11px;
   line-height: 1.7;
-  color: #a8a49b;
+  color: #c3beb2;
+  text-shadow: 0 1px 4px rgba(5, 7, 11, 0.9);
 }
 
 /* ---------------------------------------------------------------- *
@@ -656,8 +661,31 @@
 
   .rail-button {
     width: auto;
-    padding: 5px 7px;
+    min-height: 34px;
+    padding: 6px 9px;
     white-space: nowrap;
+  }
+
+  .drawer-body {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 14px;
+    padding-top: 14px;
+  }
+
+  .drawer-nav.line-sidebar--markers {
+    padding-left: 0;
+  }
+
+  .drawer-nav .line-sidebar__list {
+    flex-direction: row;
+    gap: 20px;
+    padding: 0;
+  }
+
+  .drawer-nav .line-sidebar__marker,
+  .drawer-nav .line-sidebar__item::after {
+    display: none;
   }
 
   .transport {
@@ -687,10 +715,6 @@
     border-left: 0;
   }
 
-  .drawer-body {
-    grid-template-columns: 74px minmax(0, 1fr);
-    gap: 12px;
-  }
 }
 
 @media (max-width: 380px) {
