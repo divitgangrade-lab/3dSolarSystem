@@ -43,6 +43,20 @@ resetting the camera.
 On screens narrower than 560px the section nav becomes a horizontal row above a
 full-width panel, because the two-column layout cannot hold both.
 
+### Surface mode
+
+Frame a body and press `L`, or use the Walk button in the inspector, to land. The
+surface is a separate scene with its own procedural terrain, boulders and sun
+arc, generated from the body's orbit color, so no image files are added. Walk
+with `WASD` or the arrow keys, hold `Shift` to run, drag to look, and press
+`Escape` or `L` to return to orbit.
+
+The HUD reports a thermometer and a humidity sensor. Values are mean surface
+conditions per body, adjusted by the local sun elevation as the day cycle runs:
+Mercury swings from 167 °C, Venus holds 464 °C, Earth sits near 15 °C and 62%
+humidity, Mars is -63 °C and near-vacuum, and the giants stay below -100 °C.
+Solar altitude also drives the light, the sky gradient and the fog.
+
 ### Bundle shape
 
 | Chunk | Size | Gzip | When it loads |
@@ -50,6 +64,7 @@ full-width panel, because the two-column layout cannot hold both.
 | `index-*.js` | 627 kB | 215 kB | first paint |
 | `orrery-*.js` | 593 kB | 149 kB | first paint, after the boot screen |
 | dossier chunks | 64 kB total | 25 kB | first drawer open, warmed on hover |
+| `Surface-*.js` | 10 kB | 4 kB | first landing |
 
 ## Publishing
 
@@ -79,6 +94,7 @@ curl -s https://divitgangrade-lab.github.io/3dSolarSystem/ | grep -o 'index-[^"]
 - `Space` pauses and resumes.
 - `Escape` closes the dossier if it is open, otherwise returns to the full system.
 - `0`-`9` jump to a body in rail order. `D` opens the dossier.
+- `L` lands on the focused body. `WASD` walk, `Shift` runs, `Escape` returns to orbit.
 
 ## Interface inventory: 25 React Bits components
 

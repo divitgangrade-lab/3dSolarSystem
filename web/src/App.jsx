@@ -26,6 +26,7 @@ import SpotlightCard from './reactbits/SpotlightCard.jsx';
 import StarBorder from './reactbits/StarBorder.jsx';
 import TextType from './reactbits/TextType.jsx';
 const TiltedCard = lazy(() => import('./reactbits/TiltedCard.jsx'));
+const Surface = lazy(() => import('./Surface.jsx'));
 
 /* Warm the dossier chunks when a pointer or the keyboard reaches the toggle. */
 let warmed = false;
@@ -41,6 +42,9 @@ function warmDossier() {
 }
 
 const SECTIONS = ['Bodies', 'Signal', 'About'];
+
+/* The Sun has no ground to stand on. */
+const LANDABLE = new Set(['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'moon']);
 
 const ORDER = ['sun', 'mercury', 'venus', 'earth', 'moon', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
 
@@ -151,6 +155,7 @@ export default function App() {
   const [bootFading, setBootFading] = useState(false);
   const toggleRef = useRef(null);
   const wasOpen = useRef(false);
+  const [surfaceBody, setSurfaceBody] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -195,6 +200,14 @@ export default function App() {
   const paused = Boolean(snapshot?.paused);
   const speed = snapshot?.speed ?? 1;
 
+  const exitSurface = useCallback(() => setSurfaceBody(null), []);
+
+  const walkOn = useCallback((body) => {
+    if (!body || !LANDABLE.has(body.id)) return;
+    setDrawer(false);
+    setSurfaceBody({ id: body.id, name: body.name, color: body.color });
+  }, []);
+
   const focusBody = useCallback((id) => {
     if (scene) {
       scene.focusBody(id);
@@ -206,6 +219,8 @@ export default function App() {
     if (!scene) return undefined;
 
     const onKey = (event) => {
+      /* The surface view owns the keyboard while it is open. */
+      if (surfaceBody) return;
       const target = event.target;
       if (target instanceof Element) {
         const tag = target.tagName;
@@ -230,6 +245,10 @@ export default function App() {
         setDrawer((open) => !open);
         return;
       }
+      if (event.key === 'l' || event.key === 'L') {
+        if (focus && LANDABLE.has(focus.id)) walkOn(focus);
+        return;
+      }
       const digit = Number(event.key);
       if (Number.isInteger(digit) && digit >= 0 && digit <= 9) {
         const body = bodies[digit];
@@ -239,7 +258,7 @@ export default function App() {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [scene, bodies, drawer]);
+  }, [scene, bodies, drawer, surfaceBody, focus, walkOn]);
 
   const onSpeed = (value) => {
     setSlider(value);
@@ -255,6 +274,7 @@ export default function App() {
   })), [bodies]);
 
   const status = paused ? 'Simulation paused' : 'Simulation running';
+  const landable = Boolean(focus && LANDABLE.has(focus.id));
 
   return (
     <>
@@ -337,7 +357,15 @@ export default function App() {
                         <dd><FactValue value={value} /></dd>
                       </div>
                     ))}
-                  </dl>
+                                    </dl>
+
+                  {landable ? (
+                    <button type="button" className="land-button" onClick={() => walkOn(focus)}>
+                      Walk on {focus.name}
+                      <span className="drawer-key">L</span>
+                    </button>
+                  ) : null}
+
                   <DecryptedText
                     text={focus.fact}
                     animateOn="view"
@@ -598,6 +626,12 @@ export default function App() {
         </div>
       ) : null}
       </Suspense>
+
+      {surfaceBody ? (
+        <Suspense fallback={null}>
+          <Surface body={surfaceBody} onExit={exitSurface} />
+        </Suspense>
+      ) : null}
 
       {!bootGone ? (
         <div

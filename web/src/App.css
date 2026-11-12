@@ -734,3 +734,258 @@
     bottom: 136px;
   }
 }
+
+/* ---------------------------------------------------------------- *
+ * Surface mode
+ * ---------------------------------------------------------------- */
+
+.land-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin: 2px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(240, 180, 41, 0.34);
+  border-radius: 10px;
+  background: rgba(240, 180, 41, 0.08);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.land-button:hover {
+  background: rgba(240, 180, 41, 0.16);
+  border-color: rgba(240, 180, 41, 0.62);
+}
+
+.surface {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  background: #05070b;
+  animation: surface-in 420ms ease both;
+}
+
+@keyframes surface-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.surface-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+.surface-canvas:active {
+  cursor: grabbing;
+}
+
+.surface-head {
+  position: absolute;
+  top: 24px;
+  left: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  pointer-events: none;
+  text-shadow: 0 2px 12px rgba(5, 7, 11, 0.85);
+}
+
+.surface-kicker {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.surface-name {
+  font-family: var(--serif);
+  font-size: 34px;
+  line-height: 1;
+}
+
+.surface-note {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.surface-exit {
+  position: absolute;
+  top: 24px;
+  right: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(6, 9, 14, 0.78);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.surface-exit:hover {
+  color: var(--ink);
+  border-color: rgba(240, 180, 41, 0.4);
+}
+
+.surface-cross {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: rgba(236, 233, 226, 0.55);
+  box-shadow: 0 0 0 3px rgba(5, 7, 11, 0.45);
+  pointer-events: none;
+}
+
+.sensors {
+  position: absolute;
+  left: 26px;
+  bottom: 24px;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(6, 9, 14, 0.82);
+  backdrop-filter: blur(14px);
+}
+
+.sensor {
+  display: grid;
+  grid-template-rows: auto 92px auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.sensor-label {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.sensor-gauge {
+  position: relative;
+  width: 14px;
+  height: 92px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sensor-fill {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(180deg, #f0b429, #c1633a);
+  transition: height 400ms ease;
+}
+
+.sensor-fill--water {
+  background: linear-gradient(180deg, #7fc4e8, #2f6f9f);
+}
+
+.sensor-tick {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: rgba(236, 233, 226, 0.28);
+}
+
+.sensor-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.sensor-unit {
+  font-size: 9px;
+  color: var(--faint);
+}
+
+.sensor--readout {
+  grid-template-rows: auto auto auto;
+  align-items: start;
+  max-width: 190px;
+}
+
+.sensor-sun {
+  font-family: var(--serif);
+  font-size: 22px;
+}
+
+.sensor-hint {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  line-height: 1.7;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+@media (max-width: 560px) {
+  .surface-head {
+    top: 16px;
+    left: 16px;
+  }
+
+  .surface-name {
+    font-size: 26px;
+  }
+
+  .surface-exit {
+    top: 16px;
+    right: 16px;
+    padding: 8px 10px;
+  }
+
+  .sensors {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    gap: 12px;
+    padding: 10px 12px;
+  }
+
+  .sensor {
+    grid-template-rows: auto 70px auto;
+  }
+
+  .sensor-gauge {
+    height: 70px;
+  }
+
+  .sensor-hint {
+    display: none;
+  }
+}
