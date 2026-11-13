@@ -51,11 +51,20 @@ arc, generated from the body's orbit color, so no image files are added. Walk
 with `WASD` or the arrow keys, hold `Shift` to run, drag to look, and press
 `Escape` or `L` to return to orbit.
 
+On a touch screen the pad in the lower right replaces the keyboard, and dragging
+empty sky still looks around. The pad only appears for coarse pointers, so a
+mouse never sees it.
+
 The HUD reports a thermometer and a humidity sensor. Values are mean surface
 conditions per body, adjusted by the local sun elevation as the day cycle runs:
 Mercury swings from 167 °C, Venus holds 464 °C, Earth sits near 15 °C and 62%
 humidity, Mars is -63 °C and near-vacuum, and the giants stay below -100 °C.
 Solar altitude also drives the light, the sky gradient and the fog.
+
+The walk is a free camera, not a physics body: boulders do not block you, there
+is no water or gravity, and the gas giants put you on a flat cloud deck rather
+than a real surface. The terrain is one square chunk that ends at its edge, so a
+long walk stops at the boundary instead of wrapping.
 
 ### Bundle shape
 
@@ -95,6 +104,7 @@ curl -s https://divitgangrade-lab.github.io/3dSolarSystem/ | grep -o 'index-[^"]
 - `Escape` closes the dossier if it is open, otherwise returns to the full system.
 - `0`-`9` jump to a body in rail order. `D` opens the dossier.
 - `L` lands on the focused body. `WASD` walk, `Shift` runs, `Escape` returns to orbit.
+  On touch screens, use the on-screen pad to walk.
 
 ## Interface inventory: 25 React Bits components
 

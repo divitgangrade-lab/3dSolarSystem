@@ -989,3 +989,91 @@
     display: none;
   }
 }
+
+/* Touch controls. Coarse pointers get a pad; WASD already covers the rest. */
+.surface-pad {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .surface-pad {
+    position: absolute;
+    right: 16px;
+    bottom: 152px;
+    display: grid;
+    grid-template-columns: repeat(3, 52px);
+    grid-template-rows: repeat(2, 52px);
+    gap: 6px;
+  }
+
+  .pad-key {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(6, 9, 14, 0.72);
+    backdrop-filter: blur(10px);
+    color: var(--muted);
+    font-size: 13px;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  }
+
+  .pad-key:active {
+    background: rgba(240, 180, 41, 0.18);
+    border-color: rgba(240, 180, 41, 0.6);
+    color: var(--ink);
+  }
+
+  .pad-up {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .pad-left {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .pad-down {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .pad-right {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .pad-hint {
+    grid-column: 1 / -1;
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .surface-cross {
+    display: none;
+  }
+}
+
+/* Landscape phones are short; lift the pad clear of the sensor bar. */
+@media (pointer: coarse) and (max-height: 430px) {
+  .surface-pad {
+    bottom: 104px;
+    grid-template-columns: repeat(3, 46px);
+    grid-template-rows: repeat(2, 46px);
+  }
+
+  .pad-key {
+    width: 46px;
+    height: 46px;
+  }
+}

@@ -17,8 +17,17 @@ function formatHumidity(value) {
   return value.toFixed(0);
 }
 
+/* Order matches the on-screen pad: forward, left, back, right. */
+const PAD = [
+  { code: 'KeyW', label: 'Walk forward', glyph: '\u25b2', slot: 'up' },
+  { code: 'KeyA', label: 'Strafe left', glyph: '\u25c0', slot: 'left' },
+  { code: 'KeyS', label: 'Walk back', glyph: '\u25bc', slot: 'down' },
+  { code: 'KeyD', label: 'Strafe right', glyph: '\u25b6', slot: 'right' },
+];
+
 export default function Surface({ body, onExit }) {
   const canvasRef = useRef(null);
+  const mountRef = useRef(null);
   const [sensor, setSensor] = useState(null);
 
   useEffect(() => {
@@ -27,6 +36,7 @@ export default function Surface({ body, onExit }) {
       onExit();
       return undefined;
     }
+    mountRef.current = mount;
     const unsubscribe = mount.subscribe(setSensor);
 
     const onKey = (event) => {
@@ -40,9 +50,16 @@ export default function Surface({ body, onExit }) {
     return () => {
       unsubscribe();
       window.removeEventListener('keydown', onKey);
+      mountRef.current = null;
       mount.dispose();
     };
   }, [body, onExit]);
+
+  /* Press and release are separate events so a held key keeps walking. */
+  const hold = (code, down) => (event) => {
+    event.preventDefault();
+    mountRef.current?.press(code, down);
+  };
 
   const temp = sensor ? sensor.temp : 0;
   const humidity = sensor ? sensor.humidity : 0;
@@ -50,7 +67,11 @@ export default function Surface({ body, onExit }) {
 
   return (
     <div className="surface" role="region" aria-label={`Surface of ${body.name}`}>
-      <canvas ref={canvasRef} className="surface-canvas" />
+      <canvas
+        ref={canvasRef}
+        className="surface-canvas"
+        aria-label={`Walkable terrain on ${body.name}. Drag to look around.`}
+      />
 
       <div className="surface-head">
         <span className="surface-kicker">Surface</span>
@@ -63,6 +84,25 @@ export default function Surface({ body, onExit }) {
       </button>
 
       <div className="surface-cross" aria-hidden="true" />
+
+      <div className="surface-pad" role="group" aria-label="Walking controls">
+        {PAD.map((key) => (
+          <button
+            key={key.code}
+            type="button"
+            className={`pad-key pad-${key.slot}`}
+            aria-label={key.label}
+            onPointerDown={hold(key.code, true)}
+            onPointerUp={hold(key.code, false)}
+            onPointerLeave={hold(key.code, false)}
+            onPointerCancel={hold(key.code, false)}
+            onContextMenu={(event) => event.preventDefault()}
+          >
+            <span aria-hidden="true">{key.glyph}</span>
+          </button>
+        ))}
+        <span className="pad-hint">Drag to look</span>
+      </div>
 
       <div className="sensors" role="group" aria-label="Surface sensors">
         <div className="sensor">

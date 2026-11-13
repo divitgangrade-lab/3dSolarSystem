@@ -226,6 +226,9 @@ export function mountSurface(canvas, body) {
 
   const sun = new THREE.DirectionalLight('#fff2d6', 2.1);
   scene.add(sun);
+  /* The target carries the light's aim; without it in the graph the matrix
+     world it needs is only kept current by hand. */
+  scene.add(sun.target);
   const ambient = new THREE.HemisphereLight('#9fb6d8', color.clone().multiplyScalar(0.35), 0.9);
   scene.add(ambient);
 
@@ -250,6 +253,12 @@ export function mountSurface(canvas, body) {
 
   const keys = new Set();
   const listeners = new Set();
+
+  /* Touch controls drive the same key set as the keyboard. */
+  const press = (code, down) => {
+    if (down) keys.add(code);
+    else keys.delete(code);
+  };
   let raf = 0;
   let last = 0;
   let disposed = false;
@@ -317,7 +326,8 @@ export function mountSurface(canvas, body) {
   };
   const onPointerUp = (event) => {
     dragging = false;
-    canvas.releasePointerCapture?.(event.pointerId);
+    /* A cancelled pointer already lost capture; releasing again throws. */
+    if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
   };
 
   window.addEventListener('keydown', onKeyDown);
@@ -387,6 +397,7 @@ export function mountSurface(canvas, body) {
   raf = requestAnimationFrame(frame);
 
   return {
+    press,
     subscribe(listener) {
       listeners.add(listener);
       listener(snapshot());
@@ -394,6 +405,7 @@ export function mountSurface(canvas, body) {
     },
     dispose() {
       disposed = true;
+      keys.clear();
       cancelAnimationFrame(raf);
       observer.disconnect();
       window.removeEventListener('keydown', onKeyDown);
